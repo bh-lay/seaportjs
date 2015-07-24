@@ -2,7 +2,7 @@
  * @author bh-lay
  * 
  * @github https://github.com/bh-lay/seaportjs
- * @modified 2015-7-24 18:51
+ * @modified 2015-7-24 19:
  * 
  **/
 (function(global){
@@ -10,7 +10,7 @@
   var doc = document,
       head = doc.head || doc.getElementsByTagName("head")[0] || doc.documentElement;
   //处理自定义事件
-  function ON(eventName,id,callback){
+  function ONE(eventName,id,callback){
     this._events = this._events || {};
     //事件堆无该事件，创建一个事件堆
     if(!this._events[eventName]){
@@ -30,9 +30,10 @@
     if(!eventsList){
       return;
     }
-    for(var i=0,total=eventsList.length;i<total;i++){
+    for(var i = eventsList.length-1;i!=-1;i--){
       if(eventsList[i][0] == id){
         eventsList[i][1].apply(this.event_global || this,args);
+        eventsList.splice(i,1);
       }
     }
   }
@@ -74,7 +75,7 @@
     use: function(path){
       loadJS(this.base + path);
     },
-    on: ON
+    one: ONE
   };
   
   var miniSea = new Seaport();
@@ -87,19 +88,16 @@
     
     miniSea._modules[id] = returns || exports;
     EMIT.call(miniSea,'initModule',id);
-    
-    //console.log('init',id);
   }
   function define(id,depends,factory){
-//    console.log('waiting  define:',id,depends.length);
+    id = id.replace(/\.js$/,'');
     var need_load = depends.length;
     //等待依赖加载完毕，初始化模块
     for(var last=depends.length-1;last>=0;last--){
       if(miniSea._modules[id]){
         need_load--;
       }else{
-        //FIXME 解绑
-        miniSea.on('initModule',depends[last],function(){
+        miniSea.one('initModule',depends[last],function(){
           need_load--;
           if(need_load == 0){
             initModule(id,factory);
@@ -107,7 +105,6 @@
         });
       }
     }
-    //console.log('init',id,need_load);
     if(need_load == 0){
       initModule(id,factory);
     }
@@ -120,4 +117,3 @@
   global.seajs = miniSea;
   global.define = define;
 })(window);
-
