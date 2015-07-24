@@ -2,7 +2,7 @@
  * @author bh-lay
  * 
  * @github https://github.com/bh-lay/seaportjs
- * @modified 2015-7-24 20:17
+ * @modified 2015-7-24 20:43
  * 
  **/
 (function(global){
@@ -12,7 +12,20 @@
       //缓存模块对象
       modules = {},
       //模块加载完成回调事件集合
-      moduleInitEvents = [];
+      moduleInitEvents = [],
+      // seaport
+      Seaport = {
+        base: '',
+        map: '',
+        config: function(param){
+          param = param || {};
+          param.base && (this.base = param.base);
+          param.map && (this.map = param.map);
+        },
+        use: function(path){
+          loadJS(this.base + path);
+        }
+      };
   //注册模块加载完成监听（仅触发一次）
   function onceModuleInit(id,callback){
     moduleInitEvents.push([
@@ -31,11 +44,11 @@
   }
   //加载javascript
   function loadJS(url,fn){
-    var script = document.createElement('script');
+    var script = doc.createElement('script');
     script.type = 'text/javascript';
     script.charset = 'UTF-8';
     
-    if (script.readyState){  //IE  
+    if (script.readyState){
       script.onreadystatechange = function(){  
         if (script.readyState == "loaded" || script.readyState == "complete"){  
           script.onreadystatechange = null;  
@@ -50,22 +63,6 @@
     head.appendChild(script);
   }
   
-  /**
-   * mini seajs类
-   *
-   **/
-  var Seaport = {
-    base: '',
-    map: '',
-    config: function(param){
-      param = param || {};
-      param.base && (this.base = param.base);
-      param.map && (this.map = param.map);
-    },
-    use: function(path){
-      loadJS(this.base + path);
-    }
-  };
   //从缓存中读取模块
   function require(id){
     id = id.replace(/\.js$/,'');
