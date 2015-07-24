@@ -2,38 +2,30 @@
  * @author bh-lay
  * 
  * @github https://github.com/bh-lay/seaportjs
- * @modified 2015-7-24 19:
+ * @modified 2015-7-24 20:17
  * 
  **/
 (function(global){
   "use strict";
   var doc = document,
-      head = doc.head || doc.getElementsByTagName("head")[0] || doc.documentElement;
-  //处理自定义事件
-  function ONE(eventName,id,callback){
-    this._events = this._events || {};
-    //事件堆无该事件，创建一个事件堆
-    if(!this._events[eventName]){
-      this._events[eventName] = [];
-    }
-    this._events[eventName].push([
+      head = doc.head || doc.getElementsByTagName("head")[0] || doc.documentElement,
+      //缓存模块对象
+      modules = {},
+      //模块加载完成回调事件集合
+      moduleInitEvents = [];
+  //注册模块加载完成监听（仅触发一次）
+  function onceModuleInit(id,callback){
+    moduleInitEvents.push([
       id,
       callback
     ]);
-    //提供链式调用的支持
-    return this;
   }
-  function EMIT(eventName,id,args){
-    this._events = this._events || {};
-    var eventsList = this._events[eventName];
-    //事件堆无该事件，结束运行
-    if(!eventsList){
-      return;
-    }
-    for(var i = eventsList.length-1;i!=-1;i--){
-      if(eventsList[i][0] == id){
-        eventsList[i][1].apply(this.event_global || this,args);
-        eventsList.splice(i,1);
+  //通知模块加载完成，并立即删除监听
+  function emitModuleInit(id,args){
+    for(var i = moduleInitEvents.length-1;i!=-1;i--){
+      if(moduleInitEvents[i][0] == id){
+        moduleInitEvents[i][1].apply(this,args);
+        moduleInitEvents.splice(i,1);
       }
     }
   }
@@ -62,42 +54,45 @@
    * mini seajs类
    *
    **/
-  function Seaport(){
-    this.base = '';
-    this.map = null;
-    this._modules = {};
-  };
-  Seaport.prototype = {
+  var Seaport = {
+    base: '',
+    map: '',
     config: function(param){
       param = param || {};
       param.base && (this.base = param.base);
+      param.map && (this.map = param.map);
     },
     use: function(path){
       loadJS(this.base + path);
-    },
-    one: ONE
+    }
   };
-  
-  var miniSea = new Seaport();
+  //从缓存中读取模块
+  function require(id){
+    id = id.replace(/\.js$/,'');
+    return modules[id] ? modules[id] : null;
+  }
   /**
    * 初始化模块（依赖全部加载完毕方可执行）
    **/
   function initModule (id,factory){
     var exports = {},
-      returns = factory(require,exports);
-    
-    miniSea._modules[id] = returns || exports;
-    EMIT.call(miniSea,'initModule',id);
+        returns = factory(require,exports);
+    //优先使用return传递的模块接口
+    modules[id] = returns || exports;
+    emitModuleInit(id);
   }
+  /**
+   * 接收模块定义的主函数
+   **/
   function define(id,depends,factory){
     id = id.replace(/\.js$/,'');
     var need_load = depends.length;
     //等待依赖加载完毕，初始化模块
-    for(var last=depends.length-1;last>=0;last--){
-      if(miniSea._modules[id]){
+    for(var index=depends.length-1;index>=0;index--){
+      if(modules[id]){
         need_load--;
       }else{
-        miniSea.one('initModule',depends[last],function(){
+        onceModuleInit(depends[index],function(){
           need_load--;
           if(need_load == 0){
             initModule(id,factory);
@@ -110,10 +105,6 @@
     }
   }
   define.cmd = {};
-  function require(id){
-    id = id.replace(/\.js$/,'');
-    return miniSea._modules[id] ? miniSea._modules[id] : null;
-  }
-  global.seajs = miniSea;
+  global.seajs = Seaport;
   global.define = define;
 })(window);
