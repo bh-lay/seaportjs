@@ -2,7 +2,7 @@
  * @author bh-lay
  * 
  * @github https://github.com/bh-lay/seaportjs
- * @modified 2015-7-24 20:43
+ * @modified 2015-7-25 23:51
  * 
  **/
 (function(global){
@@ -16,14 +16,18 @@
       // seaport
       Seaport = {
         base: '',
-        map: '',
+        map: [],
         config: function(param){
           param = param || {};
           param.base && (this.base = param.base);
-          param.map && (this.map = param.map);
+          param.map && (this.map = this.map.concat(param.map));
         },
         use: function(path){
-          loadJS(this.base + path);
+          var url = this.base + path;
+          for(var i=this.map.length-1;i>=0;i--){
+            url = url.replace(this.map[i][0],this.map[i][1]);
+          }
+          loadJS(url);
         }
       };
   //注册模块加载完成监听（仅触发一次）
