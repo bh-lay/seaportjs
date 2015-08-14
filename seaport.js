@@ -2,7 +2,7 @@
  * @author bh-lay
  * 
  * @github https://github.com/bh-lay/seaportjs
- * @modified 2015-7-25 23:51
+ * @modified 2015-8-14 22:59
  * 
  **/
 (function(global){
@@ -76,10 +76,12 @@
    * 初始化模块（依赖全部加载完毕方可执行）
    **/
   function initModule (id,factory){
-    var exports = {},
-        returns = factory(require,exports);
+    var module = {
+          exports: {}
+        },
+        returns = factory(require,module.exports,module);
     //优先使用return传递的模块接口
-    modules[id] = returns || exports;
+    modules[id] = returns || module.exports;
     emitModuleInit(id);
   }
   /**
