@@ -1,7 +1,7 @@
 Seaport：seajs特定场景下的替代品 
 ======
 
-具体介绍请看这里：![http://bh-lay.com/blog/14f132531e0](http://bh-lay.com/blog/14f132531e0)
+具体介绍请看这里：[http://bh-lay.com/blog/14f132531e0](http://bh-lay.com/blog/14f132531e0)
 
 ##可用在什么场景下？
 
